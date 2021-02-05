@@ -4,7 +4,7 @@ var gdprCookieNoticeLocales = {};
 function gdprCookieNotice(config) {
   var namespace = 'gdprcookienotice';
   var pluginPrefix = 'gdpr-cookie-notice';
-  var templates = window[pluginPrefix+'-templates'];
+  var templates = window[pluginPrefix + '-templates'];
   var gdprCookies = Cookies.noConflict();
   var modalLoaded = false;
   var noticeLoaded = false;
@@ -12,26 +12,40 @@ function gdprCookieNotice(config) {
   var categories = ['performance', 'analytics', 'marketing'];
 
   // Default config options
-  if(!config.locale) config.locale = 'en';
-  if(!config.timeout) config.timeout = 500;
-  if(!config.domain) config.domain = null;
-  if(!config.expiration) config.expiration = 30;
+  if (!config.explicit) config.explicit = false;
+  if (config.explicit === true) config.explicit = categories;
+  if (!config.require) config.require = [];
+  if (config.require === true) config.require = categories;
+  if (!config.locale) config.locale = (window.navigator.userLanguage || window.navigator.language || 'de').substr(0, 2);
+  if (!config.timeout) config.timeout = 500;
+  if (!config.domain) config.domain = null;
+  if (!config.expiration) config.expiration = 365;
 
-  // Use 'en' locale if current locale doesn't exist
+  // Use 'de' locale if current locale doesn't exist
   if (typeof gdprCookieNoticeLocales[config.locale] === 'undefined') {
-    config.locale = 'en';
+    config.locale = 'de';
   }
 
   // Get the users current cookie selection
   var currentCookieSelection = getCookie();
-  var cookiesAcceptedEvent = new CustomEvent('gdprCookiesEnabled', {detail: currentCookieSelection});
+  var cookiesAcceptedEvent = new CustomEvent('gdprCookiesEnabled', { detail: currentCookieSelection });
 
   // Show cookie bar if needed
-  if(!currentCookieSelection) {
+  if (!currentCookieSelection) {
+
+    // delete cookies if explicit consent is required
+    if (config.explicit) {
+      var inferredConsent = categories.reduce(function (categories, current) {
+        categories[current] = Boolean(config.explicit.indexOf(current) < 0);
+        return categories;
+      }, {});
+      deleteCookies(inferredConsent);
+    }
+
     showNotice();
 
     // Accept cookies on page scroll
-    if(config.implicit) {
+    if (config.implicit) {
       acceptOnScroll();
     }
   } else {
@@ -46,18 +60,20 @@ function gdprCookieNotice(config) {
 
   // Delete cookies if needed
   function deleteCookies(savedCookies) {
-    var notAllEnabled = false;
+    var notAllRequiredEnabled = false;
     for (var i = 0; i < categories.length; i++) {
-      if(config[categories[i]] && !savedCookies[categories[i]]) {
+      if (config[categories[i]] && !savedCookies[categories[i]]) {
         for (var ii = 0; ii < config[categories[i]].length; ii++) {
           gdprCookies.remove(config[categories[i]][ii]);
-          notAllEnabled = true;
+          if (config.require.includes(categories[i])) {
+            notAllRequiredEnabled = true;
+          }
         }
       }
     }
 
     // Show the notice if not all categories are enabled
-    if(notAllEnabled) {
+    if (notAllRequiredEnabled) {
       showNotice();
     } else {
       hideNotice();
@@ -66,7 +82,7 @@ function gdprCookieNotice(config) {
 
   // Hide cookie notice bar
   function hideNotice() {
-    document.documentElement.classList.remove(pluginPrefix+'-loaded');
+    document.documentElement.classList.remove(pluginPrefix + '-loaded');
   }
 
   // Write gdpr cookie notice's cookies when user accepts cookies
@@ -80,23 +96,22 @@ function gdprCookieNotice(config) {
     };
 
     // If request was coming from the modal, check for the settings
-    if(save) {
+    if (save) {
       for (var i = 0; i < categories.length; i++) {
-        value[categories[i]] = document.getElementById(pluginPrefix+'-cookie_'+categories[i]).checked;
+        value[categories[i]] = (document.getElementById(pluginPrefix + '-cookie_' + categories[i]) || {}).checked;
       }
     }
     gdprCookies.set(namespace, value, { expires: config.expiration, domain: config.domain });
     deleteCookies(value);
 
     // Load marketing scripts that only works when cookies are accepted
-    cookiesAcceptedEvent = new CustomEvent('gdprCookiesEnabled', {detail: value});
+    cookiesAcceptedEvent = new CustomEvent('gdprCookiesEnabled', { detail: value });
     document.dispatchEvent(cookiesAcceptedEvent);
-
   }
 
   // Show the cookie bar
   function buildNotice() {
-    if(noticeLoaded) {
+    if (noticeLoaded) {
       return false;
     }
 
@@ -115,8 +130,8 @@ function gdprCookieNotice(config) {
     buildNotice();
 
     // Show the notice with a little timeout
-    setTimeout(function(){
-      document.documentElement.classList.add(pluginPrefix+'-loaded');
+    setTimeout(function () {
+      document.documentElement.classList.add(pluginPrefix + '-loaded');
     }, config.timeout);
   }
 
@@ -125,25 +140,25 @@ function gdprCookieNotice(config) {
     var str = templates[template];
     var data = gdprCookieNoticeLocales[config.locale];
 
-    if(prefix) {
-      prefix = prefix+'_';
+    if (prefix) {
+      prefix = prefix + '_';
     } else {
       prefix = '';
     }
 
     if (typeof str === 'string' && (data instanceof Object)) {
       for (var key in data) {
-        return str.replace(/({([^}]+)})/g, function(i) {
+        return str.replace(/({([^}]+)})/g, function (i) {
           var key = i.replace(/{/, '').replace(/}/, '');
 
-          if(key == 'prefix') {
+          if (key == 'prefix') {
             return prefix.slice(0, -1);
           }
 
-          if(data[key]) {
+          if (data[key]) {
             return data[key];
-          } else if(data[prefix+key]) {
-            return data[prefix+key];
+          } else if (data[prefix + key]) {
+            return data[prefix + key];
           } else {
             return i;
           }
@@ -156,7 +171,7 @@ function gdprCookieNotice(config) {
 
   // Build modal window
   function buildModal() {
-    if(modalLoaded) {
+    if (modalLoaded) {
       return false;
     }
 
@@ -167,30 +182,30 @@ function gdprCookieNotice(config) {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     // Get empty category list
-    var categoryList = document.querySelector('.'+pluginPrefix+'-modal-cookies');
+    var categoryList = document.querySelector('.' + pluginPrefix + '-modal-cookies');
 
     //Load essential cookies
     categoryList.innerHTML += localizeTemplate('category.html', 'cookie_essential');
-    var input = document.querySelector('.'+pluginPrefix+'-modal-cookie-input');
-    var label = document.querySelector('.'+pluginPrefix+'-modal-cookie-input-switch');
+    var input = document.querySelector('.' + pluginPrefix + '-modal-cookie-input');
+    var label = document.querySelector('.' + pluginPrefix + '-modal-cookie-input-switch');
     label.innerHTML = gdprCookieNoticeLocales[config.locale]['always_on'];
-    label.classList.add(pluginPrefix+'-modal-cookie-state');
-    label.classList.remove(pluginPrefix+'-modal-cookie-input-switch');
+    label.classList.add(pluginPrefix + '-modal-cookie-state');
+    label.classList.remove(pluginPrefix + '-modal-cookie-input-switch');
     input.remove();
 
     // Load other categories if needed
-    if(config.performance) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_performance');
-    if(config.analytics) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_analytics');
-    if(config.marketing) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_marketing');
+    if (config.performance) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_performance');
+    if (config.analytics) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_analytics');
+    if (config.marketing) categoryList.innerHTML += localizeTemplate('category.html', 'cookie_marketing');
 
     // Load click functions
     setModalEventListeners();
 
     // Update checkboxes based on stored info(if any)
-    if(currentCookieSelection) {
-      document.getElementById(pluginPrefix+'-cookie_performance').checked = currentCookieSelection.performance;
-      document.getElementById(pluginPrefix+'-cookie_analytics').checked = currentCookieSelection.analytics;
-      document.getElementById(pluginPrefix+'-cookie_marketing').checked = currentCookieSelection.marketing;
+    if (currentCookieSelection) {
+      (document.getElementById(pluginPrefix + '-cookie_performance') || {}).checked = currentCookieSelection.performance;
+      (document.getElementById(pluginPrefix + '-cookie_analytics') || {}).checked = currentCookieSelection.analytics;
+      (document.getElementById(pluginPrefix + '-cookie_marketing') || {}).checked = currentCookieSelection.marketing;
     }
 
     // Make sure modal is only loaded once
@@ -200,25 +215,25 @@ function gdprCookieNotice(config) {
   // Show modal window
   function showModal() {
     buildModal();
-    document.documentElement.classList.add(pluginPrefix+'-show-modal');
+    document.documentElement.classList.add(pluginPrefix + '-show-modal');
   }
 
   // Hide modal window
   function hideModal() {
-    document.documentElement.classList.remove(pluginPrefix+'-show-modal');
+    document.documentElement.classList.remove(pluginPrefix + '-show-modal');
   }
 
   // Click functions in the notice
   function setNoticeEventListeners() {
-    var settingsButton = document.querySelectorAll('.'+pluginPrefix+'-nav-item-settings')[0];
-    var acceptButton = document.querySelectorAll('.'+pluginPrefix+'-nav-item-accept')[0];
+    var settingsButton = document.querySelectorAll('.' + pluginPrefix + '-nav-item-settings')[0];
+    var acceptButton = document.querySelectorAll('.' + pluginPrefix + '-nav-item-accept')[0];
 
-    settingsButton.addEventListener('click', function(e) {
+    settingsButton.addEventListener('click', function (e) {
       e.preventDefault();
       showModal();
     });
 
-    acceptButton.addEventListener('click', function(e) {
+    acceptButton.addEventListener('click', function (e) {
       e.preventDefault();
       acceptCookies();
     });
@@ -227,32 +242,32 @@ function gdprCookieNotice(config) {
 
   // Click functions in the modal
   function setModalEventListeners() {
-    var closeButton = document.querySelectorAll('.'+pluginPrefix+'-modal-close')[0];
-    var statementButton = document.querySelectorAll('.'+pluginPrefix+'-modal-footer-item-statement')[0];
-    var categoryTitles = document.querySelectorAll('.'+pluginPrefix+'-modal-cookie-title');
-    var saveButton = document.querySelectorAll('.'+pluginPrefix+'-modal-footer-item-save')[0];
+    var closeButton = document.querySelectorAll('.' + pluginPrefix + '-modal-close')[0];
+    var statementButton = document.querySelectorAll('.' + pluginPrefix + '-modal-footer-item-statement')[0];
+    var categoryTitles = document.querySelectorAll('.' + pluginPrefix + '-modal-cookie-title');
+    var saveButton = document.querySelectorAll('.' + pluginPrefix + '-modal-footer-item-save')[0];
 
-    closeButton.addEventListener('click', function() {
+    closeButton.addEventListener('click', function () {
       hideModal();
       return false;
     });
 
-    statementButton.addEventListener('click', function(e) {
+    statementButton.addEventListener('click', function (e) {
       e.preventDefault();
       window.location.href = config.statement;
     });
 
     for (var i = 0; i < categoryTitles.length; i++) {
-      categoryTitles[i].addEventListener('click', function() {
+      categoryTitles[i].addEventListener('click', function () {
         this.parentNode.parentNode.classList.toggle('open');
         return false;
       });
     }
 
-    saveButton.addEventListener('click', function(e) {
+    saveButton.addEventListener('click', function (e) {
       e.preventDefault();
       saveButton.classList.add('saved');
-      setTimeout(function(){
+      setTimeout(function () {
         saveButton.classList.remove('saved');
       }, 1000);
       acceptCookies(true);
@@ -261,10 +276,10 @@ function gdprCookieNotice(config) {
   }
 
   // Settings button on the page somewhere
-  var globalSettingsButton = document.querySelectorAll('.'+pluginPrefix+'-settings-button');
-  if(globalSettingsButton) {
+  var globalSettingsButton = document.querySelectorAll('.' + pluginPrefix + '-settings-button');
+  if (globalSettingsButton) {
     for (var i = 0; i < globalSettingsButton.length; i++) {
-      globalSettingsButton[i].addEventListener('click', function(e) {
+      globalSettingsButton[i].addEventListener('click', function (e) {
         e.preventDefault();
         showModal();
       });
@@ -283,13 +298,13 @@ function gdprCookieNotice(config) {
   }
 
   // Check if at least page is 25% scrolled down
-  function amountScrolled(){
-    var winheight= window.innerHeight || (document.documentElement || document.body).clientHeight;
+  function amountScrolled() {
+    var winheight = window.innerHeight || (document.documentElement || document.body).clientHeight;
     var docheight = getDocHeight();
     var scrollTop = window.pageYOffset || (document.documentElement || document.body.parentNode || document.body).scrollTop;
     var trackLength = docheight - winheight;
-    var pctScrolled = Math.floor(scrollTop/trackLength * 100); // gets percentage scrolled (ie: 80 or NaN if tracklength == 0)
-    if(pctScrolled > 25 && !cookiesAccepted) {
+    var pctScrolled = Math.floor(scrollTop / trackLength * 100); // gets percentage scrolled (ie: 80 or NaN if tracklength == 0)
+    if (pctScrolled > 25 && !cookiesAccepted) {
       cookiesAccepted = true;
       return true;
     } else {
@@ -300,11 +315,26 @@ function gdprCookieNotice(config) {
   // Accept cookies on scroll
   function acceptOnScroll() {
     window.addEventListener('scroll', function _listener() {
-      if(amountScrolled()) {
+      if (amountScrolled()) {
         acceptCookies();
         window.removeEventListener('click', _listener);
       }
     });
   }
 
-}
+};
+
+function conditionalLoadAds() {
+  (adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
+  document.addEventListener('gdprCookiesEnabled', function (e) {
+    if (e.detail.marketing) {
+      if (adsbygoogle.pauseAdRequests === 1) {
+        var gads = document.createElement('script');
+        gads.src = "//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+        document.head.appendChild(gads);
+        adsbygoogle.push({});
+        adsbygoogle.pauseAdRequests = 0;
+      }
+    }
+  });
+};
