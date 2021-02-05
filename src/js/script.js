@@ -12,7 +12,8 @@ function gdprCookieNotice(config) {
   var categories = ['performance', 'analytics', 'marketing'];
 
   // Default config options
-  if (!config.explicit) config.explicit = false;
+  if (config.explicit === false) config.explicit = [];
+  if (config.explicit === undefined) config.explicit = true;
   if (config.explicit === true) config.explicit = categories;
   if (!config.require) config.require = [];
   if (config.require === true) config.require = categories;
@@ -33,20 +34,22 @@ function gdprCookieNotice(config) {
   // Show cookie bar if needed
   if (!currentCookieSelection) {
 
-    // delete cookies if explicit consent is required
-    if (config.explicit) {
-      var inferredConsent = categories.reduce(function (categories, current) {
-        categories[current] = Boolean(config.explicit.indexOf(current) < 0);
-        return categories;
-      }, {});
-      deleteCookies(inferredConsent);
-    }
+    // infer default consent
+    var inferredConsent = categories.reduce(function (categories, current) {
+      categories[current] = Boolean(config.explicit.indexOf(current) < 0);
+      return categories;
+    }, {});
+    console.log(inferredConsent);
+    deleteCookies(inferredConsent);
+
 
     showNotice();
 
     // Accept cookies on page scroll
     if (config.implicit) {
       acceptOnScroll();
+    } else {
+      document.dispatchEvent(new CustomEvent('gdprCookiesInferred', { detail: inferredConsent }));
     }
   } else {
     deleteCookies(currentCookieSelection);
@@ -63,6 +66,7 @@ function gdprCookieNotice(config) {
     var notAllRequiredEnabled = false;
     for (var i = 0; i < categories.length; i++) {
       if (config[categories[i]] && !savedCookies[categories[i]]) {
+        console.log("[Cookie Consent] Blocking %s cookies", categories[i]);
         for (var ii = 0; ii < config[categories[i]].length; ii++) {
           gdprCookies.remove(config[categories[i]][ii]);
           if (config.require.includes(categories[i])) {
@@ -321,20 +325,30 @@ function gdprCookieNotice(config) {
       }
     });
   }
-
 };
 
 function conditionalLoadAds() {
   (adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
-  document.addEventListener('gdprCookiesEnabled', function (e) {
-    if (e.detail.marketing) {
-      if (adsbygoogle.pauseAdRequests === 1) {
-        var gads = document.createElement('script');
-        gads.src = "//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-        document.head.appendChild(gads);
-        adsbygoogle.push({});
-        adsbygoogle.pauseAdRequests = 0;
-      }
+
+  function loadAds(consent) {
+    // default to non personalize ads
+    adsbygoogle.requestNonPersonalizedAds = 1;
+
+    // user consented to personalized adds
+    if (consent.marketing) {
+      adsbygoogle.requestNonPersonalizedAds = 0;
     }
-  });
+
+    // load ads
+    if (adsbygoogle.pauseAdRequests === 1) {
+      var gads = document.createElement('script');
+      gads.src = "//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+      document.head.appendChild(gads);
+      adsbygoogle.push({});
+      adsbygoogle.pauseAdRequests = 0;
+    }
+  };
+
+  document.addEventListener('gdprCookiesInferred', function (e) { loadAds(e.detail); });
+  document.addEventListener('gdprCookiesEnabled', function (e) { loadAds(e.detail); });
 };
