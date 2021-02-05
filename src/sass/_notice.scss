@@ -1,23 +1,28 @@
-$bar_bg: rgb(51, 51, 51);
-$bar_primary: rgb(255, 153, 0);
-$bar_text: rgba(255, 255, 255, 0.75);
-$bar_link: rgb(255, 255, 255);
-
-$modal_overlay: rgba(0, 0, 0, 0.4);
-$modal_bg: rgb(255, 255, 255);
-$modal_footer: rgb(244, 245, 247);
-$modal_title: rgba(0, 0, 0, 0.8);
-$modal_text: rgba(0, 0, 0, 0.5);
-$modal_icon: rgb(189, 189, 189);
-$modal_primary: rgb(255, 153, 0);
-
 $icon_checkmark: 'data:image/svg+xml;utf8,<svg height="11" viewBox="0 0 14 11" width="14" xmlns="http://www.w3.org/2000/svg"><path d="m5 10.42-5-5 1.41-1.41 3.59 3.58 7.59-7.59 1.41 1.42z" fill="rgb(255,255,255)" fill-rule="evenodd"/></svg>';
-$icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m1.41 0-1.41 1.41 4.58 4.59-4.58 4.59 1.41 1.41 6-6z" fill="' +
-  $bar_primary + '"/></svg>';
+$icon_caret: 'data:image/svg+xml;utf8,<svg class="gdpr-cookie-notice-caret" height="12" viewBox="0 0 8 12" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m1.41 0-1.41 1.41 4.58 4.59-4.58 4.59 1.41 1.41 6-6z""/></svg>';
+
+:root {
+  --bar_bg: rgb(51, 51, 51);
+  --bar_primary: rgb(255, 153, 0);
+  --bar_text: rgba(255, 255, 255, 0.75);
+  --bar_link: rgb(255, 255, 255);
+
+  --modal_overlay: rgba(0, 0, 0, 0.4);
+  --modal_bg: rgb(255, 255, 255);
+  --modal_footer: rgb(244, 245, 247);
+  --modal_title: rgba(0, 0, 0, 0.8);
+  --modal_text: rgba(0, 0, 0, 0.5);
+  --modal_icon: rgb(189, 189, 189);
+  --modal_primary: rgb(255, 153, 0);
+}
+
+.gdpr-cookie-notice-caret path {
+  fill: var(--bar_primary);
+}
 
 .gdpr-cookie-notice {
   position: fixed;
-  background: $bar_bg;
+  background: var(--bar_bg);
   left: 0;
   bottom: 0;
   right: 0;
@@ -41,7 +46,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
   &-description {
     margin: 0;
     padding: 0 16px 0 0;
-    color: $bar_text;
+    color: var(--bar_text);
     font-size: 14px;
     line-height: 20px;
     text-align: left;
@@ -69,7 +74,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
       height: 40px;
       line-height: 40px;
       white-space: nowrap;
-      color: $bar_link;
+      color: var(--bar_link);
       padding: 0 16px;
       font-size: 15px;
       font-weight: 600;
@@ -79,8 +84,8 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
       }
 
       &-btn {
-        color: $modal_title;
-        background: $bar_primary;
+        color: var(--modal_title);
+        background: var(--bar_primary);
         border-radius: 3px;
       }
     }
@@ -94,7 +99,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
     height: 100%;
     background: url($icon_caret);
     z-index: 1001;
-    background: $modal_overlay;
+    background: var(--modal_overlay);
     overflow: auto;
     align-items: center;
     padding: 20px 10px;
@@ -107,7 +112,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
     &-content {
       width: 470px;
       border-radius: 6px;
-      background: $modal_bg;
+      background: var(--modal_bg);
       margin: auto;
     }
 
@@ -115,12 +120,12 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
       display: flex;
       align-items: center;
       padding: 16px;
-      border-bottom: 1px solid $modal_footer;
+      border-bottom: 1px solid var(--modal_footer);
     }
 
     &-title {
       font-size: 18px;
-      color: $modal_title;
+      color: var(--modal_title);
       font-weight: 600;
       line-height: 18px;
       margin: 0;
@@ -148,7 +153,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-        background: $modal_icon;
+        background: var(--modal_icon);
       }
 
       &:after {
@@ -170,7 +175,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
 
     &-cookie {
       display: block;
-      border-bottom: 1px solid $modal_footer;
+      border-bottom: 1px solid var(--modal_footer);
       list-style-type: none;
       padding: 0;
       margin: 0;
@@ -184,7 +189,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
       &-title {
         font-weight: normal;
         font-size: 15px;
-        color: $modal_title;
+        color: var(--modal_title);
         margin: 0;
         padding: 0;
         line-height: 1;
@@ -196,7 +201,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
           height: 0;
           border-style: solid;
           border-width: 5px 5px 0 5px;
-          border-color: $modal_icon transparent transparent transparent;
+          border-color: var(--modal_icon) transparent transparent transparent;
           content: "";
           display: block;
           position: absolute;
@@ -212,7 +217,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
       }
 
       &-state {
-        color: $modal_primary;
+        color: var(--modal_primary);
         margin-left: auto;
         font-size: 15px;
       }
@@ -221,15 +226,15 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
         opacity: 0;
 
         &:checked + &-switch {
-          background: $modal_primary;
-          box-shadow: inset 0px 0px 0px 1px $modal_primary;
+          background: var(--modal_primary);
+          box-shadow: inset 0px 0px 0px 1px var(--modal_primary);
         }
 
         &-switch {
           width: 24px;
           height: 24px;
           border-radius: 50%;
-          box-shadow: inset 0px 0px 0px 1px $modal_icon;
+          box-shadow: inset 0px 0px 0px 1px var(--modal_icon);
           margin: 0 0 0 auto;
           position: relative;
           transition: all ease 0.3s;
@@ -252,7 +257,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
         margin: 0;
         padding: 0 16px 12px 16px;
         font-size: 13px;
-        color: $modal_text;
+        color: var(--modal_text);
         line-height: 16px;
         display: none;
 
@@ -263,7 +268,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
     }
 
     &-footer {
-      background: $modal_footer;
+      background: var(--modal_footer);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -279,7 +284,7 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
         text-decoration: none;
         margin: 0;
         padding: 0;
-        color: $modal_primary;
+        color: var(--modal_primary);
         position: relative;
 
         &:after {
@@ -296,8 +301,8 @@ $icon_caret: 'data:image/svg+xml;utf8,<svg height="12" viewBox="0 0 8 12" width=
 
         &-btn {
           padding: 0 16px;
-          color: $modal_title;
-          background: $modal_primary;
+          color: var(--modal_title);
+          background: var(--modal_primary);
           border-radius: 3px;
           position: relative;
 
