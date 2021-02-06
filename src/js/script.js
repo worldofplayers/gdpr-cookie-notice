@@ -39,7 +39,6 @@ function gdprCookieNotice(config) {
       categories[current] = Boolean(config.explicit.indexOf(current) < 0);
       return categories;
     }, {});
-    console.log(inferredConsent);
     deleteCookies(inferredConsent);
 
 
